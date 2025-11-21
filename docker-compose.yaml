@@ -1,0 +1,42 @@
+version: '3.8'
+services:
+  user-manager:
+    build: ./microservices/user_manager
+    ports:
+      - "5001:5000"
+    environment:
+      - DATABASE_URL=postgresql://user_manager:password@user-db:5432/user_manager_db
+    depends_on:
+      - user-db
+  user-db:
+    image: postgres:13
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=user_manager
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=user_manager_db
+    volumes:
+      - user_db_data:/var/lib/postgresql/data
+  data-collector:
+    build: ./microservices/data_collector
+    ports:
+      - "5002:5000"
+    environment:
+      - DATABASE_URL=postgresql://data_collector:password@data-db:5432/data_collector_db
+    depends_on:
+      - data-db
+  data-db:
+    image: postgres:13
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=data_collector
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=data_collector_db
+    volumes:
+      - data_db_data:/var/lib/postgresql/data
+
+volumes:
+  user_db_data:
+  data_db_data:
