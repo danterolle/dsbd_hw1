@@ -47,5 +47,8 @@ class FlightData(db.Model):
         Integer, nullable=True
     )
 
+    def to_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
     def __repr__(self):
         return f"<Flight {self.callsign} from {self.est_departure_airport} to {self.est_arrival_airport}>"
