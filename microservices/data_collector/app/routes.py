@@ -31,6 +31,7 @@ def add_interest():
     Adds a new user interest and triggers data fetch for the specified airport.
 
     The request body must be a JSON object with 'email' and 'airport_code' fields.
+    It can also optionally include 'high_value' and 'low_value' thresholds.
 
     Returns:
         A JSON response with a success message or an error message.
@@ -38,9 +39,14 @@ def add_interest():
     data: dict[str, Any] = request.get_json()
     email: Optional[str] = data.get("email")
     airport_code: Optional[str] = data.get("airport_code")
+    high_value: Optional[int] = data.get("high_value")
+    low_value: Optional[int] = data.get("low_value")
 
     if not email or not airport_code:
         return jsonify({"error": "Missing email or airport_code"}), 400
+
+    if high_value is not None and low_value is not None and high_value <= low_value:
+        return jsonify({"error": "high_value must be greater than low_value"}), 400
 
     if not services.check_user_exists_grpc(email):
         return jsonify({"error": "User does not exist"}), 404
@@ -53,15 +59,77 @@ def add_interest():
     if existing_interest:
         return jsonify({"message": "Interest already exists"}), 200
 
-    interest = UserInterest(user_email=email, airport_code=airport_code)
+    interest = UserInterest(
+        user_email=email,
+        airport_code=airport_code,
+        high_value=high_value,
+        low_value=low_value,
+    )
     db.session.add(interest)
     try:
         db.session.commit()
+        from app import app
+
         fetch_thread = threading.Thread(
-            target=services.fetch_and_store_flights, args=(airport_code,)
+            target=services.fetch_and_store_flights, args=(airport_code, app)
         )
         fetch_thread.start()
         return jsonify({"message": "Interest added and data fetch initiated"}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+@main.route("/interests", methods=["PUT"])
+def update_interest():
+    """
+    Updates the high and low value thresholds for an existing user interest.
+
+    The request body must be a JSON object with 'email', 'airport_code',
+    and at least one of 'high_value' or 'low_value'.
+
+    Returns:
+        A JSON response with a success message or an error message.
+    """
+    data: dict[str, Any] = request.get_json()
+    email: Optional[str] = data.get("email")
+    airport_code: Optional[str] = data.get("airport_code")
+    high_value: Optional[int] = data.get("high_value")
+    low_value: Optional[int] = data.get("low_value")
+
+    if not email or not airport_code:
+        return jsonify({"error": "Missing email or airport_code"}), 400
+
+    if high_value is None and low_value is None:
+        return (
+            jsonify({"error": "At least one of high_value or low_value is required"}),
+            400,
+        )
+
+    interest: Optional[UserInterest] = (
+        db.session.query(UserInterest)
+        .filter_by(user_email=email, airport_code=airport_code)
+        .first()
+    )
+
+    if not interest:
+        return jsonify({"error": "Interest not found"}), 404
+
+    if high_value is not None:
+        interest.high_value = high_value
+    if low_value is not None:
+        interest.low_value = low_value
+
+    if (
+        interest.high_value is not None
+        and interest.low_value is not None
+        and interest.high_value <= interest.low_value
+    ):
+        return jsonify({"error": "high_value must be greater than low_value"}), 400
+
+    try:
+        db.session.commit()
+        return jsonify({"message": "Interest updated successfully"}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
@@ -99,8 +167,10 @@ def remove_interest():
     db.session.delete(interest)
     try:
         db.session.commit()
+        from app import app
+
         cleanup_thread = threading.Thread(
-            target=services.cleanup_airport_data, args=(airport_code,)
+            target=services.cleanup_airport_data, args=(airport_code, app)
         )
         cleanup_thread.start()
         return (
@@ -115,13 +185,13 @@ def remove_interest():
 @main.route("/interests/<string:email>", methods=["GET"])
 def get_user_interests(email: str):
     """
-    Gets all airport codes a user is interested in.
+    Gets all airport interests for a user, including thresholds.
 
     Args:
         email (str): The email of the user.
 
     Returns:
-        A JSON response with the user's email and a list of airport codes.
+        A JSON response with the user's email and a list of their interests.
     """
     if not services.check_user_exists_grpc(email):
         return jsonify({"error": "User does not exist"}), 404
@@ -129,8 +199,15 @@ def get_user_interests(email: str):
     interests: list[UserInterest] = (
         db.session.query(UserInterest).filter_by(user_email=email).all()
     )
-    airport_codes: list[str] = [interest.airport_code for interest in interests]
-    return jsonify({"email": email, "airport_codes": airport_codes}), 200
+    user_interests = [
+        {
+            "airport_code": interest.airport_code,
+            "high_value": interest.high_value,
+            "low_value": interest.low_value,
+        }
+        for interest in interests
+    ]
+    return jsonify({"email": email, "interests": user_interests}), 200
 
 
 @main.route("/flights/<string:airport_code>", methods=["GET"])

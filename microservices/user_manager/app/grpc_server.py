@@ -7,7 +7,6 @@ checking if a user exists.
 from concurrent import futures
 
 import grpc
-from flask import current_app
 
 try:
     import service_pb2, service_pb2_grpc
@@ -21,6 +20,9 @@ except ImportError:
 class UserService(service_pb2_grpc.UserServiceServicer):
     """gRPC service for the User Manager microservice."""
 
+    def __init__(self, app):
+        self.app = app
+
     def CheckUserExists(self, request, context):
         """
         Checks if a user exists in the database.
@@ -32,7 +34,7 @@ class UserService(service_pb2_grpc.UserServiceServicer):
         Returns:
             service_pb2.UserResponse: A response indicating whether the user exists.
         """
-        with current_app.app_context():
+        with self.app.app_context():
             try:
                 user = db.session.get(User, request.email)
                 exists = user is not None
@@ -42,7 +44,7 @@ class UserService(service_pb2_grpc.UserServiceServicer):
                 return service_pb2.UserResponse(exists=False)
 
 
-def serve_grpc():
+def serve_grpc(app):
     """
     Starts the gRPC server for the User Manager service.
 
@@ -54,7 +56,7 @@ def serve_grpc():
         return
 
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    service_pb2_grpc.add_UserServiceServicer_to_server(UserService(), server)
+    service_pb2_grpc.add_UserServiceServicer_to_server(UserService(app), server)
     server.add_insecure_port("[::]:50051")
     print("gRPC Server starting on port 50051...")
     server.start()

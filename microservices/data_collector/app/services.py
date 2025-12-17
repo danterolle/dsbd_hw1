@@ -3,31 +3,71 @@
 It includes functions for interacting with the OpenSky API, handling gRPC calls,
 and managing the data collection process.
 """
+
 import os
 import time
+import json
 import requests
 import grpc
 from datetime import datetime
 from typing import Optional
+from pybreaker import CircuitBreaker, CircuitBreakerError
 
 from flask import current_app
 from sqlalchemy import tuple_
+from kafka import KafkaProducer
 
 from models import db, UserInterest, FlightData
-from config import OPENSKY_API_URL, TOKEN_URL, USER_MANAGER_GRPC_HOST
+from config import (
+    OPENSKY_API_URL,
+    TOKEN_URL,
+    USER_MANAGER_GRPC_HOST,
+    KAFKA_BROKER_URL,
+    KAFKA_TOPIC,
+)
 
 try:
     import service_pb2
     import service_pb2_grpc
 except ImportError:
-    # This is a bit of a hack to make sure that the linter doesn't complain
-    # and that the application still runs from the command line.
     import service_pb2
     import service_pb2_grpc
 
 
 cached_token = None
 cached_expiry = 0
+
+# Create a circuit breaker
+breaker = CircuitBreaker(fail_max=5, reset_timeout=60)
+
+# Create a Kafka producer
+producer = KafkaProducer(
+    bootstrap_servers=KAFKA_BROKER_URL,
+    value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+)
+
+
+def send_alert_to_kafka(airport_code: str, flight_count: int) -> None:
+    """
+    Sends an alert to Kafka for each user interested in the airport.
+
+    Args:
+        airport_code (str): The airport code.
+        flight_count (int): The number of flights.
+    """
+    with current_app.app_context():
+        interests = UserInterest.query.filter_by(airport_code=airport_code).all()
+        for interest in interests:
+            if interest.high_value is not None or interest.low_value is not None:
+                message = {
+                    "user_email": interest.user_email,
+                    "airport_code": interest.airport_code,
+                    "flight_count": flight_count,
+                    "high_value": interest.high_value,
+                    "low_value": interest.low_value,
+                }
+                producer.send(KAFKA_TOPIC, message)
+                print(f"Sent message to Kafka: {message}")
 
 
 def get_opensky_token() -> Optional[str]:
@@ -65,9 +105,10 @@ def get_opensky_token() -> Optional[str]:
         return None
 
 
+@breaker
 def call_opensky(api_url: str, params: Optional[dict] = None) -> Optional[dict]:
     """
-    Makes an authenticated call to the OpenSky API.
+    Makes an authenticated call to the OpenSky API, protected by a circuit breaker.
 
     Args:
         api_url (str): The URL of the API endpoint to call.
@@ -86,8 +127,7 @@ def call_opensky(api_url: str, params: Optional[dict] = None) -> Optional[dict]:
         return response.json()
     except requests.exceptions.RequestException as e:
         print(f"Error calling OpenSky API: {e}")
-        return None
-
+        raise  
 
 def get_grpc_stub() -> Optional[service_pb2_grpc.UserServiceStub]:
     """
@@ -125,12 +165,13 @@ def check_user_exists_grpc(email: str) -> bool:
         return True
 
 
-def fetch_and_store_flights(airport_code: str) -> None:
+def fetch_and_store_flights(airport_code: str, app) -> None:
     """
     Fetches and stores the last 24 hours of flights for a given airport.
 
     Args:
         airport_code (str): The ICAO code of the airport.
+        app: The Flask application instance.
     """
     print(f"Fetching flights for airport: {airport_code}")
     end_time = int(time.time())
@@ -139,21 +180,27 @@ def fetch_and_store_flights(airport_code: str) -> None:
     url = f"{OPENSKY_API_URL}/flights/all"
     params = {"airport": airport_code, "begin": begin_time, "end": end_time}
 
-    flights = call_opensky(url, params=params)
-    if flights:
-        print(f"Found {len(flights)} flights for {airport_code}.")
-        with current_app.app_context():
-            save_flight_data(flights)
-    else:
-        print(f"No flights found for {airport_code}.")
+    try:
+        flights = call_opensky(url, params=params)
+        if flights:
+            flight_count = len(flights)
+            print(f"Found {flight_count} flights for {airport_code}.")
+            with app.app_context():
+                save_flight_data(flights)
+                send_alert_to_kafka(airport_code, flight_count)
+        else:
+            print(f"No flights found for {airport_code}.")
+    except CircuitBreakerError:
+        print("Circuit breaker is open. Skipping OpenSky API call.")
 
 
-def data_collection_job() -> None:
+
+def data_collection_job(app) -> None:
     """Background job to periodically collect flight data for all interested airports."""
     print("Data collection job started.")
     while True:
         print("Starting data collection cycle...")
-        with current_app.app_context():
+        with app.app_context():
             try:
                 interests = db.session.query(UserInterest.airport_code).distinct().all()
                 unique_airports: list[str] = [i[0] for i in interests]
@@ -244,15 +291,16 @@ def save_flight_data(flights: list[dict]) -> None:
             print(f"DB Error saving flights for batch: {e}")
 
 
-def cleanup_airport_data(airport_code: str) -> None:
+def cleanup_airport_data(airport_code: str, app) -> None:
     """
     Checks if an airport is still a favorite for any user.
     If not, deletes all flight data for that airport.
 
     Args:
         airport_code (str): The ICAO code of the airport to clean up.
+        app: The Flask application instance.
     """
-    with current_app.app_context():
+    with app.app_context():
         interest_exists = (
             db.session.query(UserInterest).filter_by(airport_code=airport_code).first()
         )

@@ -43,11 +43,12 @@ def create_app():
 app = create_app()
 
 if __name__ == "__main__":
-    collector_thread = threading.Thread(target=data_collection_job, daemon=True)
+    collector_thread = threading.Thread(
+        target=data_collection_job, args=(app,), daemon=True
+    )
     grpc_thread = threading.Thread(target=serve_grpc, daemon=True)
 
-    with app.app_context():
-        collector_thread.start()
-        grpc_thread.start()
+    collector_thread.start()
+    grpc_thread.start()
 
     app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)

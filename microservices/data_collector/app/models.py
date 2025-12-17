@@ -22,6 +22,8 @@ class UserInterest(db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_email: Mapped[str] = mapped_column(String(120), index=True, nullable=False)
     airport_code: Mapped[str] = mapped_column(String(4), nullable=False)
+    high_value: Mapped[int] = mapped_column(Integer, nullable=True)
+    low_value: Mapped[int] = mapped_column(Integer, nullable=True)
 
     def __repr__(self) -> str:
         """Returns a string representation of the UserInterest object."""

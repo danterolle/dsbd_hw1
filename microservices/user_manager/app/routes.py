@@ -105,6 +105,39 @@ def add_user():
     return jsonify(response_body), response_code
 
 
+@main.route("/users/telegram", methods=["POST"])
+def add_telegram_chat_id():
+    """
+    Associates a Telegram chat ID with a user.
+
+    The request body must be a JSON object with 'email' and 'telegram_chat_id'.
+
+    Returns:
+        A JSON response with a success message or an error message.
+    """
+    data: Optional[dict[str, Any]] = request.get_json()
+    if not data or "email" not in data or "telegram_chat_id" not in data:
+        return jsonify({"error": "Missing email or telegram_chat_id"}), 400
+
+    email = data["email"]
+    telegram_chat_id = data["telegram_chat_id"]
+
+    user = db.session.get(User, email)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    user.telegram_chat_id = telegram_chat_id
+    try:
+        db.session.commit()
+        return jsonify({"message": "Telegram chat ID updated successfully"}), 200
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "Telegram chat ID is already in use"}), 409
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
 @main.route("/users/<string:email>", methods=["DELETE"])
 def delete_user(email: str):
     """

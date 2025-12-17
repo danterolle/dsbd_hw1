@@ -1,8 +1,17 @@
 services:
+  api-gateway:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - user-manager
+      - data-collector
+
   user-manager:
     build: ./microservices/user_manager
     ports:
-      - "5001:5000"
       - "50051:50051"
     environment:
       - DATABASE_URL=postgresql://${USER_DB_USER}:${USER_DB_PASSWORD}@user-db:5432/${USER_DB_NAME}
@@ -27,7 +36,6 @@ services:
   data-collector:
     build: ./microservices/data_collector
     ports:
-      - "5002:5000"
       - "50052:50052"
     environment:
       - DATABASE_URL=postgresql://${DATA_DB_USER}:${DATA_DB_PASSWORD}@data-db:5432/${DATA_DB_NAME}
@@ -51,6 +59,38 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+  kafka:
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CREATE_TOPICS: "to-alert-system:1:1,to-notifier:1:1"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  alert-system:
+    build: ./microservices/alert_system
+    environment:
+      - KAFKA_BROKER_URL=kafka:9092
+    depends_on:
+      - kafka
+
+  alert-notifier-system:
+    build: ./microservices/alert_notifier_system
+    environment:
+      - KAFKA_BROKER_URL=kafka:9092
+      - DATABASE_URL=postgresql://${USER_DB_USER}:${USER_DB_PASSWORD}@user-db:5432/${USER_DB_NAME}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    depends_on:
+      - kafka
+      - user-db
 
 volumes:
   user_db_data:
