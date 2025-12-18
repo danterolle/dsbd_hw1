@@ -1,5 +1,37 @@
 # Project Documentation
 
+# Table of Contents
+
+- [1. Introduction](#1-introduction)
+- [2. System Architecture](#2-system-architecture)
+  - [2.1. Overview](#21-overview)
+  - [2.2. Architectural Diagram](#22-architectural-diagram)
+- [3. Components](#3-components)
+  - [3.1. API Gateway (NGINX)](#31-api-gateway-nginx)
+  - [3.2. User Manager Microservice](#32-user-manager-microservice)
+  - [3.3. Data Collector Microservice](#33-data-collector-microservice)
+  - [3.4. Alert System Service](#34-alert-system-service)
+  - [3.5. Alert Notifier System Service](#35-alert-notifier-system-service)
+- [4. Implementation Choices](#4-implementation-choices)
+  - [4.1. Coding Standards](#41-coding-standards)
+- [5. Database Schema](#5-database-schema)
+  - [5.1. User Manager DB](#51-user-manager-db)
+  - [5.2. Data Collector DB](#52-data-collector-db)
+- [6. Setup and Execution](#6-setup-and-execution)
+  - [6.1. Prerequisites](#61-prerequisites)
+  - [6.2. Configuration](#62-configuration)
+  - [6.3. SSL Certificate Generation](#63-ssl-certificate-generation)
+  - [6.4. Running the Application](#64-running-the-application)
+  - [6.5. Testing with Postman](#65-testing-with-postman)
+- [7. At-Most-Once Semantics (Idempotency)](#7-at-most-once-semantics-idempotency)
+  - [7.1. Implementation Details](#71-implementation-details)
+  - [7.2. How to Test with Postman](#72-how-to-test-with-postman)
+    - [Scenario 1: Successful First Request](#scenario-1-successful-first-request)
+    - [Scenario 2: Repeated Request (Same Key)](#scenario-2-repeated-request-same-key)
+    - [Scenario 3: Creating a User That Already Exists (New Key)](#scenario-3-creating-a-user-that-already-exists-new-key)
+    - [Scenario 4: Request Without Idempotency Key](#scenario-4-request-without-idempotency-key)
+- [8. Asynchronous Notification Flow](#8-asynchronous-notification-flow)
+
 ## 1. Introduction
 
 This document provides a detailed overview of a distributed systems project, which consists of a Dockerized, microservices-based application. The system is designed to manage user data, collect flight information from the OpenSky Network, and provide users with real-time, threshold-based alerts via Telegram.
