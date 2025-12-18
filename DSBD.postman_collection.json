@@ -59,6 +59,60 @@
 					"response": []
 				},
 				{
+					"name": "Add Telegram Chat ID",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"content-type": true
+						}
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{$guid}}",
+								"type": "text"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "3f9d2e1b-8c4a-4d6f-b1e2-5a7f8c2d9e4",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"mario.rossi@gmail.com\",\n    \"telegram_chat_id\": \"@teosche\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8080/users/telegram",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8080",
+							"path": [
+								"users",
+								"telegram"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Ping",
 					"request": {
 						"method": "GET",
@@ -130,7 +184,7 @@
 							}
 						},
 						"url": {
-							"raw": "http://127.0.0.1:5001/users/mario.rosso@gmail.com",
+							"raw": "http://127.0.0.1:5001/user-manager(users/mario.rossi@gmail.com",
 							"protocol": "http",
 							"host": [
 								"127",
@@ -140,8 +194,8 @@
 							],
 							"port": "5001",
 							"path": [
-								"users",
-								"mario.rosso@gmail.com"
+								"user-manager(users",
+								"mario.rossi@gmail.com"
 							]
 						}
 					},
@@ -285,7 +339,7 @@
 							"formdata": []
 						},
 						"url": {
-							"raw": "http://127.0.0.1:5002/flights/LIMC?type=arrivals",
+							"raw": "http://127.0.0.1:5002/data-collector/flights/LIMC?type=arrivals",
 							"protocol": "http",
 							"host": [
 								"127",
@@ -295,6 +349,7 @@
 							],
 							"port": "5002",
 							"path": [
+								"data-collector",
 								"flights",
 								"LIMC"
 							],
