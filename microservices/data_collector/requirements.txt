@@ -16,3 +16,5 @@ Werkzeug==3.1.3
 psycopg2-binary
 requests
 python-dotenv
+pybreaker
+kafka-python

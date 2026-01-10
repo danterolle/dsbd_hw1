@@ -12,3 +12,5 @@ TOKEN_URL: str = (
     "https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token"
 )
 DATABASE_URL: str = os.environ.get("DATABASE_URL")
+KAFKA_BROKER_URL: str = os.environ.get("KAFKA_BROKER_URL", "kafka:9092")
+KAFKA_TOPIC: str = os.environ.get("KAFKA_TOPIC", "to-alert-system")

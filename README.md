@@ -1,4 +1,4 @@
-# dsbd_hw1
+# Distributed Systems and Big Data (DSBD) Homework
 
 This project is a distributed system designed to manage user information and collect/process flight data from the OpenSky Network through a microservices architecture.
 
@@ -14,7 +14,7 @@ This project is currently a **Work in Progress (WIP)** and is not intended for p
 
 ## Architecture
 
-![Architectural Diagram](architecture.png)
+![Architectural Diagram](diagrams/hw2_architecture.png)
 
 The system implements an **"at-most-once"** delivery policy for state-changing operations on the User Manager service, ensuring that requests are never processed more than once, even in the event of network retries.
 

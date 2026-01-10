@@ -41,9 +41,6 @@ def create_app():
 app = create_app()
 
 if __name__ == "__main__":
-    grpc_thread = threading.Thread(target=serve_grpc, daemon=True)
-
-    with app.app_context():
-        grpc_thread.start()
-
+    grpc_thread = threading.Thread(target=serve_grpc, args=(app,), daemon=True)
+    grpc_thread.start()
     app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)

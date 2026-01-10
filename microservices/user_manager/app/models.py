@@ -28,6 +28,9 @@ class User(db.Model):
     last_name: Mapped[str] = mapped_column(String(50), nullable=False)
     tax_code: Mapped[str] = mapped_column(String(16), unique=True, nullable=True)
     iban: Mapped[str] = mapped_column(String(27), nullable=True)
+    telegram_chat_id: Mapped[str] = mapped_column(
+        String(120), unique=True, nullable=True
+    )
 
     def to_dict(self) -> dict:
         """Converts the User object to a dictionary.
@@ -41,6 +44,7 @@ class User(db.Model):
             "last_name": self.last_name,
             "tax_code": self.tax_code,
             "iban": self.iban,
+            "telegram_chat_id": self.telegram_chat_id,
         }
 
     def __repr__(self) -> str:

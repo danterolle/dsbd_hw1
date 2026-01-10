@@ -7,8 +7,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ./app .
 
-RUN python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. service.proto
-
-EXPOSE 5000
-
 CMD ["python", "app.py"]

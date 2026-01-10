@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "./microservices/user_manager/app"
+    ]
+}
