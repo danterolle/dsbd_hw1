@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-manager
+  labels:
+    app: user-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-manager
+  template:
+    metadata:
+      labels:
+        app: user-manager
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5000"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: user-manager
+          image: user-manager:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5000
+            - containerPort: 50051
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: user-manager-db-url
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-manager
+spec:
+  selector:
+    app: user-manager
+  ports:
+    - name: http
+      port: 5000
+      targetPort: 5000
+    - name: grpc
+      port: 50051
+      targetPort: 50051s

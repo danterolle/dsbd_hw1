@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-collector
+  labels:
+    app: data-collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-collector
+  template:
+    metadata:
+      labels:
+        app: data-collector
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5000"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: data-collector
+          image: data-collector:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5000
+            - containerPort: 50052
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: data-collector-db-url
+            - name: KAFKA_BROKER_URL
+              value: "kafka:9092"
+            - name: OPEN_SKY_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: opensky-secrets
+                  key: client-id
+            - name: OPEN_SKY_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: opensky-secrets
+                  key: client-secret
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: data-collector
+spec:
+  selector:
+    app: data-collector
+  ports:
+    - name: http
+      port: 5000
+      targetPort: 5000
+    - name: grpc
+      port: 50052
+      targetPort: 50052
