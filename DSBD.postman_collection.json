@@ -1,430 +1,463 @@
 {
-	"info": {
-		"_postman_id": "d778f17a-2ad5-4bc2-a311-0fd2b419c136",
-		"name": "DSBD",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "50451597",
-		"_collection_link": "https://planetary-meadow-856452.postman.co/workspace/DSBD~93ac1b43-ecea-4900-814f-5201af7550f5/collection/23758578-d778f17a-2ad5-4bc2-a311-0fd2b419c136?action=share&source=collection_link&creator=50451597"
-	},
-	"item": [
-		{
-			"name": "user_manager",
-			"item": [
-				{
-					"name": "Add User",
-					"protocolProfileBehavior": {
-						"disabledSystemHeaders": {
-							"content-type": true
-						}
-					},
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							},
-							{
-								"key": "Idempotency-Key",
-								"value": "{{$guid}}",
-								"type": "text"
-							},
-							{
-								"key": "Idempotency-Key",
-								"value": "3f9d2e1b-8c4a-4d6f-b1e2-5a7f8c2d9e4",
-								"type": "text",
-								"disabled": true
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"email\": \"mario.rossi@gmail.com\",\n    \"first_name\": \"Mario\",\n    \"last_name\": \"Rossi\",\n    \"tax_code\": \"RSSMRA85D15Z404E\",\n    \"iban\": \"IT19Z1234567890000123456789\"\n}"
-						},
-						"url": {
-							"raw": "http://127.0.0.1:5001/users",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "5001",
-							"path": [
-								"users"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Add Telegram Chat ID",
-					"protocolProfileBehavior": {
-						"disabledSystemHeaders": {
-							"content-type": true
-						}
-					},
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							},
-							{
-								"key": "Idempotency-Key",
-								"value": "{{$guid}}",
-								"type": "text"
-							},
-							{
-								"key": "Idempotency-Key",
-								"value": "3f9d2e1b-8c4a-4d6f-b1e2-5a7f8c2d9e4",
-								"type": "text",
-								"disabled": true
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"email\": \"mario.rossi@gmail.com\",\n    \"telegram_chat_id\": \"@teosche\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "http://127.0.0.1:8080/users/telegram",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "8080",
-							"path": [
-								"users",
-								"telegram"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Ping",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://127.0.0.1:5001/ping",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "5001",
-							"path": [
-								"ping"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get User",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://127.0.0.1:5001/users/mario.rossi@gmail.com",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "5001",
-							"path": [
-								"users",
-								"mario.rossi@gmail.com"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Idempotency-Key",
-								"value": "{{$guid}}",
-								"type": "text"
-							},
-							{
-								"key": "Idempotency-Key",
-								"value": "3f9d2e1b-8c4a-4d6f-b1e2-5a7f8c2d9e4",
-								"type": "text",
-								"disabled": true
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "http://127.0.0.1:5001/user-manager(users/mario.rossi@gmail.com",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "5001",
-							"path": [
-								"user-manager(users",
-								"mario.rossi@gmail.com"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "data_manager",
-			"item": [
-				{
-					"name": "Add Interests",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"email\": \"mario.rossi@gmail.com\",\n    \"airport_code\": \"LICC\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "http://127.0.0.1:5002/interests",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "5002",
-							"path": [
-								"interests"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Remove Interest",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"email\": \"mario.rossi@gmail.com\",\n    \"airport_code\": \"LICC\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "http://127.0.0.1:5002/interests",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "5002",
-							"path": [
-								"interests"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get All Flights",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://127.0.0.1:5002/flights",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "5002",
-							"path": [
-								"flights"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Departures",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"method": "GET",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": []
-						},
-						"url": {
-							"raw": "http://127.0.0.1:5002/flights/LIMC?type=departures",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "5002",
-							"path": [
-								"flights",
-								"LIMC"
-							],
-							"query": [
-								{
-									"key": "type",
-									"value": "departures"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Arrivals",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"method": "GET",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": []
-						},
-						"url": {
-							"raw": "http://127.0.0.1:5002/data-collector/flights/LIMC?type=arrivals",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "5002",
-							"path": [
-								"data-collector",
-								"flights",
-								"LIMC"
-							],
-							"query": [
-								{
-									"key": "type",
-									"value": "arrivals"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get User Interests",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://127.0.0.1:5002/interests/mario.rossi@gmail.com",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "5002",
-							"path": [
-								"interests",
-								"mario.rossi@gmail.com"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Ping",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://127.0.0.1:5002/ping",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "5002",
-							"path": [
-								"ping"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Flights Average",
-					"request": {
-						"method": "GET",
-						"header": []
-					},
-					"response": []
-				},
-				{
-					"name": "Get Last Flight",
-					"request": {
-						"method": "GET",
-						"header": []
-					},
-					"response": []
-				}
-			]
-		}
-	]
+  "info": {
+    "_postman_id": "d778f17a-2ad5-4bc2-a311-0fd2b419c136",
+    "name": "DSBD",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "50451597",
+    "_collection_link": "https://go.postman.co/collection/23758578-d778f17a-2ad5-4bc2-a311-0fd2b419c136?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "user_manager",
+      "item": [
+        {
+          "name": "Add User",
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {
+              "content-type": true
+            }
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "3f9d2e1b-8c4a-4d6f-b1e2-5a7f8c2d9e4",
+                "type": "text",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"mario.rossi@gmail.com\",\n    \"first_name\": \"Mario\",\n    \"last_name\": \"Rossi\",\n    \"tax_code\": \"RSSMRA85D15Z404E\",\n    \"iban\": \"IT19Z1234567890000123456789\"\n}"
+            },
+            "url": {
+              "raw": "http://127.0.0.1/user-manager/users",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "path": [
+                "user-manager",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Telegram Chat ID",
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {
+              "content-type": true
+            }
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "3f9d2e1b-8c4a-4d6f-b1e2-5a7f8c2d9e4",
+                "type": "text",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"mario.rossi@gmail.com\",\n    \"telegram_chat_id\": \"your-chat-id\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://127.0.0.1/user-manager/users/telegram",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "path": [
+                "user-manager",
+                "users",
+                "telegram"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ping",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://127.0.0.1/user-manager/ping",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "path": [
+                "user-manager",
+                "ping"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://127.0.0.1/user-manager/users/mario.rossi@gmail.com",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "path": [
+                "user-manager",
+                "users",
+                "mario.rossi@gmail.com"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "3f9d2e1b-8c4a-4d6f-b1e2-5a7f8c2d9e4",
+                "type": "text",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://127.0.0.1/user-manager/users/mario.rossi@gmail.com",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "path": [
+                "user-manager",
+                "users",
+                "mario.rossi@gmail.com"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "data_manager",
+      "item": [
+        {
+          "name": "Add Interests",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"mario.rossi@gmail.com\",\n    \"airport_code\": \"LIRF\",\n    \"high_value\": 2,\n    \"low_value\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://127.0.0.1/data-collector/interests",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "path": [
+                "data-collector",
+                "interests"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Interest",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"mario.rossi@gmail.com\",\n    \"airport_code\": \"LIRF\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://127.0.0.1/data-collector/interests",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "path": [
+                "data-collector",
+                "interests"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Flights",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://127.0.0.1/data-collector/flights/LIRF",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "path": [
+                "data-collector",
+                "flights",
+                "LIRF"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Departures",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": []
+            },
+            "url": {
+              "raw": "http://127.0.0.1/data-collector/flights/LIRF?type=departures",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "path": [
+                "data-collector",
+                "flights",
+                "LIRF"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "departures"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Arrivals",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": []
+            },
+            "url": {
+              "raw": "http://127.0.0.1:5002/data-collector/flights/LIMC?type=arrivals",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "port": "5002",
+              "path": [
+                "data-collector",
+                "flights",
+                "LIMC"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "arrivals"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Interests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://127.0.0.1/data-collector/interests/mario.rossi@gmail.com",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "path": [
+                "data-collector",
+                "interests",
+                "mario.rossi@gmail.com"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ping",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://127.0.0.1/data-collector/ping",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "path": [
+                "data-collector",
+                "ping"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Flights Average",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://127.0.0.1/data-collector/flights/average/LICC",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "path": [
+                "data-collector",
+                "flights",
+                "average",
+                "LICC"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Last Flight",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://127.0.0.1/data-collector/flights/last/LICC",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "path": [
+                "data-collector",
+                "flights",
+                "last",
+                "LICC"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
 }
