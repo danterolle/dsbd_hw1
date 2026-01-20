@@ -75,6 +75,7 @@ spec:
     - name: http
       port: 5000
       targetPort: 5000
+      nodePort: 30000
     - name: grpc
       port: 50051
       targetPort: 50051
