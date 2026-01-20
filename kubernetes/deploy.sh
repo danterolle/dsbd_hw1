@@ -43,15 +43,15 @@ echo "[+] applying k8s manifests..."
 kubectl apply -f kubernetes/
 
 echo "[*] waiting for deployments to be ready..."
-kubectl wait --for=condition=ready pod -l app=zookeeper --timeout=90s
-kubectl wait --for=condition=ready pod -l app=kafka --timeout=90s
-kubectl wait --for=condition=ready pod -l app=user-db --timeout=90s
-kubectl wait --for=condition=ready pod -l app=data-db --timeout=90s
-kubectl rollout status deployment/prometheus --timeout=90s
-kubectl rollout status deployment/user-manager --timeout=90s
-kubectl rollout status deployment/data-collector --timeout=90s
-kubectl rollout status deployment/alert-system --timeout=90s
-kubectl rollout status deployment/alert-notifier-system --timeout=90s
+kubectl wait --for=condition=ready pod -l app=zookeeper --timeout=300s
+kubectl wait --for=condition=ready pod -l app=kafka --timeout=300s
+kubectl wait --for=condition=ready pod -l app=user-db --timeout=300s
+kubectl wait --for=condition=ready pod -l app=data-db --timeout=300s
+kubectl rollout status deployment/prometheus --timeout=300s
+kubectl rollout status deployment/user-manager --timeout=300s
+kubectl rollout status deployment/data-collector --timeout=300s
+kubectl rollout status deployment/alert-system --timeout=300s
+kubectl rollout status deployment/alert-notifier-system --timeout=300s
 
 echo ""
 echo "==============================================="
@@ -61,7 +61,7 @@ echo ""
 echo "Prometheus UI: http://localhost:30090"
 echo "User Manager metrics: http://localhost:30000/metrics"
 echo ""
-echo "To access services:"
+echo "To access services via direct port-forward (bypass Nginx):"
 echo "  kubectl port-forward svc/user-manager 5000:5000"
 echo "  kubectl port-forward svc/data-collector 5001:5000"
 echo ""
