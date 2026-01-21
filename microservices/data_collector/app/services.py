@@ -185,7 +185,7 @@ def fetch_and_store_flights(airport_code: str, app) -> None:
         flights = call_opensky(url, params=params)
         duration = time.time() - start_time
 
-        if flights:
+        if flights is not None:
             flight_count = len(flights)
             print(f"Found {flight_count} flights for {airport_code}.")
 
@@ -200,14 +200,17 @@ def fetch_and_store_flights(airport_code: str, app) -> None:
                 save_flight_data(flights)
                 send_alert_to_kafka(airport_code, flight_count)
         else:
-            track_opensky_call(airport_code, duration, success=True)
+            track_opensky_call(airport_code, duration, success=False)
             track_flights_fetched(airport_code, 0)
-            print(f"No flights found for {airport_code}.")
+            print(f"Failed to fetch flights for {airport_code} (possibly token error).")
     except CircuitBreakerError:
         duration = time.time() - start_time
         track_opensky_call(airport_code, duration, success=False)
         print("Circuit breaker is open. Skipping OpenSky API call.")
-
+    except Exception as e:
+        duration = time.time() - start_time
+        track_opensky_call(airport_code, duration, success=False)
+        print(f"Error fetching flights for {airport_code}: {e}")
 
 
 def data_collection_job(app) -> None:
@@ -224,7 +227,7 @@ def data_collection_job(app) -> None:
                 )
 
                 for airport in unique_airports:
-                    fetch_and_store_flights(airport)
+                    fetch_and_store_flights(airport, app)
 
             except Exception as e:
                 print(f"An error occurred in the data collection job: {e}")
