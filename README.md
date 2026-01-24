@@ -70,26 +70,26 @@ This will create the necessary `.key` and `.crt` files inside the `nginx/ssl/` d
 
 ### Kubernetes Deployment
 
-A script `setup_cluster.sh` is provided to automate the setup of a local Kind cluster and the deployment of all microservices, Kafka, Prometheus, and Ingress.
+A script `kubernetes/deploy.sh` is provided to automate the setup of a local Kind cluster and the deployment of all microservices, Kafka, Prometheus, and Ingress.
 
-1.  **Ensure `setup_cluster.sh` is executable:**
+1.  **Ensure the script is executable:**
     ```bash
-    chmod +x setup_cluster.sh
+    chmod +x kubernetes/deploy.sh
     ```
 
 2.  **Update `kubernetes/secrets.yaml`:**
     Open `kubernetes/secrets.yaml` and replace the placeholder values with your actual credentials from your `.env` file. These secrets are used by Kubernetes deployments.
 
-3.  **Run the setup script:**
+3.  **Run the deployment script:**
     ```bash
-    ./setup_cluster.sh
+    ./kubernetes/deploy.sh
     ```
     This script will:
-    *   Create a Kind cluster named `dsbd-cluster` (if it doesn't exist).
+    *   Create a Kind cluster named `flight-tracker` (if it doesn't exist).
     *   Build Docker images for all microservices.
     *   Load these images into the Kind cluster.
-    *   Install the NGINX Ingress Controller.
-    *   Apply all Kubernetes manifests for databases, Kafka, Zookeeper, microservices, Prometheus, and Ingress.
+    *   (Optional) Install the NGINX Ingress Controller (use `--ingress` flag).
+    *   Apply all Kubernetes manifests for databases, Kafka, Zookeeper, microservices, Prometheus.
 
 ## Testing the Application
 
