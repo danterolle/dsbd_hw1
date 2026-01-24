@@ -7,6 +7,7 @@ and managing the data collection process.
 import os
 import time
 import json
+import random
 import requests
 import grpc
 from datetime import datetime
@@ -163,9 +164,50 @@ def check_user_exists_grpc(email: str) -> bool:
         return True
 
 
+def get_mock_flights(airport_code: str, count: int = None) -> list[dict]:
+    """
+    Generates mock flight data when OpenSky API is down.
+    
+    Args:
+        airport_code (str): The ICAO code of the airport.
+        count (int, optional): Number of mock flights to generate. If None, random between 25 and 35.
+        
+    Returns:
+        list[dict]: A list of mock flight data.
+    """
+    if count is None:
+        count = random.randint(25, 35)
+        
+    print(f"Generating {count} mock flights for {airport_code}...")
+    mock_flights = []
+    current_time = int(time.time())
+    
+    for _ in range(count):
+        mock_flight = {
+            "icao24": "".join(random.choices("0123456789abcdef", k=6)),
+            "firstSeen": current_time - random.randint(1800, 7200),
+            "estDepartureAirport": airport_code if random.choice([True, False]) else "KZRH",
+            "lastSeen": current_time - random.randint(0, 1800),
+            "estArrivalAirport": "KLHR" if random.choice([True, False]) else airport_code,
+            "callsign": "MOCK" + "".join(random.choices("0123456789", k=4)),
+            "estDepartureAirportHorizDistance": random.randint(0, 10000),
+            "estDepartureAirportVertDistance": random.randint(0, 10000),
+            "estArrivalAirportHorizDistance": random.randint(0, 10000),
+            "estArrivalAirportVertDistance": random.randint(0, 10000),
+            "departureAirportCandidatesCount": 1,
+            "arrivalAirportCandidatesCount": 1
+        }
+        if mock_flight["estDepartureAirport"] != airport_code and mock_flight["estArrivalAirport"] != airport_code:
+             mock_flight["estDepartureAirport"] = airport_code
+             
+        mock_flights.append(mock_flight)
+    return mock_flights
+
+
 def fetch_and_store_flights(airport_code: str, app) -> None:
     """
     Fetches and stores the last 24 hours of flights for a given airport.
+    Uses mock data if the OpenSky API is unreachable.
 
     Args:
         airport_code (str): The ICAO code of the airport.
@@ -180,59 +222,69 @@ def fetch_and_store_flights(airport_code: str, app) -> None:
 
     start_time = time.time()
     success = False
+    flights = None
 
     try:
         flights = call_opensky(url, params=params)
         duration = time.time() - start_time
+        success = True
+    except (CircuitBreakerError, requests.exceptions.RequestException, Exception) as e:
+        duration = time.time() - start_time
+        print(f"Error fetching flights from OpenSky for {airport_code}: {e}")
+        success = False
 
-        if flights is not None:
-            flight_count = len(flights)
-            print(f"Found {flight_count} flights for {airport_code}.")
+    if flights is None:
+        print("Falling back to mock data.")
+        flights = get_mock_flights(airport_code)
 
-            track_opensky_call(airport_code, duration, success=True)
-            track_flights_fetched(airport_code, flight_count)
+    if flights is not None:
+        flight_count = len(flights)
+        print(f"Found {flight_count} flights for {airport_code} (Source: {'Mock' if not success else 'API'}).")
 
-            if app:
-                with app.app_context():
-                    save_flight_data(flights)
-                    send_alert_to_kafka(airport_code, flight_count)
-            else:
+        track_opensky_call(airport_code, duration, success=success)
+        track_flights_fetched(airport_code, flight_count)
+
+        if app:
+            with app.app_context():
                 save_flight_data(flights)
                 send_alert_to_kafka(airport_code, flight_count)
         else:
-            track_opensky_call(airport_code, duration, success=True)
-            track_flights_fetched(airport_code, 0)
-            print(f"No flights found for {airport_code} in the last 24 hours.")
-    except CircuitBreakerError:
-        duration = time.time() - start_time
+            save_flight_data(flights)
+            send_alert_to_kafka(airport_code, flight_count)
+    else:
         track_opensky_call(airport_code, duration, success=False)
-        print("Circuit breaker is open. Skipping OpenSky API call.")
-    except Exception as e:
-        duration = time.time() - start_time
-        track_opensky_call(airport_code, duration, success=False)
-        print(f"Error fetching flights for {airport_code}: {e}")
+        track_flights_fetched(airport_code, 0)
+        print(f"No flights found for {airport_code} (and mock generation failed).")
 
 
 def data_collection_job(app) -> None:
     """Background job to periodically collect flight data for all interested airports."""
-    print("Data collection job started.")
+    print("Data collection job started.", flush=True)
     while True:
-        print("Starting data collection cycle...")
+        print("Starting data collection cycle...", flush=True)
         with app.app_context():
             try:
+                print("Querying database for unique airports...", flush=True)
                 interests = db.session.query(UserInterest.airport_code).distinct().all()
+                print(f"Query returned: {interests}", flush=True)
+                
                 unique_airports: list[str] = [i[0] for i in interests]
                 print(
-                    f"Found {len(unique_airports)} unique airports to process: {unique_airports}"
+                    f"Found {len(unique_airports)} unique airports to process: {unique_airports}", flush=True
                 )
 
                 for airport in unique_airports:
                     fetch_and_store_flights(airport, app)
 
             except Exception as e:
-                print(f"An error occurred in the data collection job: {e}")
+                print(f"An error occurred in the data collection job: {e}", flush=True)
+                import traceback
+                traceback.print_exc()
+            finally:
+                print("Removing DB session...", flush=True)
+                db.session.remove()
 
-        print("Cycle finished. Sleeping for 5 minutes...")
+        print("Cycle finished. Sleeping for 5 minutes...", flush=True)
         time.sleep(300)
 
 
