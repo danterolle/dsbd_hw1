@@ -6,6 +6,15 @@ This project is a distributed system designed to manage user information, collec
 - Dario Camonita
 - Matteo Jacopo Schembri
 
+## Project Structure & History
+
+The `main` branch contains the **final version** of the project (aligned with Homework 3). Previous development stages and homework requirements are preserved in their respective branches:
+- **`hw1`**: Initial microservices setup and basic communication.
+- **`hw2`**: Integration of Kafka, gRPC, and initial Kubernetes deployment.
+- **`hw3`**: Final architecture with Prometheus monitoring, Mock data generation, and full Kubernetes orchestration.
+
+The assignment specifications and deliverables for each phase are available in the respective PDF files: **`hw1.pdf`**, **`hw2.pdf`**, and **`hw3.pdf`**.
+
 ## Project Status
 
 This project implements a comprehensive microservices architecture with advanced features like an API Gateway, asynchronous messaging, Circuit Breaker, and integrated monitoring. It includes a **Mock Data Generator** for offline testing and an **Alert Notifier** that integrates with Telegram.
