@@ -4,9 +4,12 @@ CLUSTER_NAME="flight-tracker"
 SERVICES=("user-manager" "data-collector" "alert-system" "alert-notifier-system")
 PF_PORTS=("5000:5000" "5001:5000" "5002:5000" "5003:5000")
 
-TIMEOUT_POD_READY=300 # 5 mins, we may increase it to 600 for slow environments or CI/CD pipelines.
-TIMEOUT_DEPLOYMENT=300
-TIMEOUT_INGRESS=180
+TIMEOUT_POD_READY=600 # 5 mins, we may increase it to 600 for slow environments or CI/CD pipelines.
+TIMEOUT_DEPLOYMENT=600
+TIMEOUT_INGRESS=300
+
+LOG_DIR="logs"
+mkdir -p "$LOG_DIR"
 
 set -euo pipefail
 
@@ -44,6 +47,16 @@ delete_cluster() {
 }
 
 deploy() {
+    mkdir -p "$LOG_DIR"
+    LOG_FILE="$LOG_DIR/${CLUSTER_NAME}-$(date +%Y%m%d-%H%M%S).log"
+    exec > >(tee -a "$LOG_FILE") 2>&1
+
+    echo "==============================================="
+    echo "[*] Deployment started at $(date)"
+    echo "[*] Logging to: $LOG_FILE"
+    echo "==============================================="
+    echo ""
+
     START_PF=false
     INSTALL_INGRESS=false
     if [[ "$*" == *"--pf"* ]] || [[ "$*" == *"--port-forward"* ]]; then
