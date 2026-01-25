@@ -8,10 +8,11 @@ Ensure you have the following installed:
 - **Docker**: Container runtime.
 - **kind**: Tool for running local Kubernetes clusters.
 - **kubectl**: Kubernetes command-line tool.
+- **curl/Postman**: For testing API endpoints.
 
 ## 2. Deployment Script (`deploy.sh`)
 
-The `deploy.sh` script automates the entire lifecycle of the deployment.
+The `deploy.sh` script automates the entire lifecycle of the deployment, including cluster creation, image building, manifest application, and verification.
 
 ### Usage
 
@@ -24,146 +25,162 @@ Actions:
   stop-pf         Stop all active port-forwarding processes.
 
 Options for 'up':
-  --pf, --port-forward    Automatically start port-forwarding (5000-5003).
-  --ingress               Install NGINX Ingress Controller.
+  --pf, --port-forward    Automatically start port-forwarding after deployment.
+  --ingress               Install NGINX Ingress Controller and enable Ingress access.
 ```
+
+### Key Features
+- **Automatic Setup**: Creates a `kind` cluster named `flight-tracker` with necessary port mappings.
+- **Image Building**: Builds Docker images for all microservices from the local source.
+- **Wait Logic**: Waits for all pods and deployments (including Kafka, Zookeeper, Databases) to be fully ready.
+- **Database Seeding**: Automatically runs `seed.sh` to populate the database with test users and interests.
+- **Logging**: Deployment logs are saved to the `logs/` directory with a timestamp (e.g., `logs/flight-tracker-20260125-225406.log`).
+- **Cleanup**: The `down` action fully removes the cluster, and `stop-pf` kills background port-forwarding processes started by the script.
 
 ## 3. Accessing Services
 
-The services are accessible via multiple methods depending on your needs.
+The services are accessible via multiple methods.
 
-### Method A: NodePorts (Always Available)
+### Method A: NodePorts (Standard)
+The cluster is configured to map these ports directly to your localhost (via `extraPortMappings` in `kind` config).
 
-The cluster is configured to map these ports directly to your localhost. This is the standard access method.
-
-| Service | Local URL |
-| :--- | :--- |
-| **User Manager** | `http://localhost:30000` |
+| Service            | Local URL                |
+|:-------------------|:-------------------------|
+| **User Manager**   | `http://localhost:30000` |
 | **Data Collector** | `http://localhost:30001` |
-| **Alert System** | `http://localhost:30002` |
+| **Alert System**   | `http://localhost:30002` |
 | **Alert Notifier** | `http://localhost:30003` |
-| **Prometheus** | `http://localhost:30090` |
+| **Prometheus**     | `http://localhost:30090` |
 
-### Method B: Port-Forwarding (using `--pf`)
+### Method B: Port-Forwarding (with `--pf`)
+If you run with `--pf`, the script creates background `kubectl port-forward` processes:
 
-If you run `./kubernetes/deploy.sh --pf`, the script creates these additional mappings:
-
-| Service | Local URL |
-| :--- | :--- |
-| **User Manager** | `http://localhost:5000` |
+| Service            | Local URL               |
+|:-------------------|:------------------------|
+| **User Manager**   | `http://localhost:5000` |
 | **Data Collector** | `http://localhost:5001` |
-| **Alert System** | `http://localhost:5002` |
+| **Alert System**   | `http://localhost:5002` |
 | **Alert Notifier** | `http://localhost:5003` |
 
-### Method C: Ingress (using `--ingress`)
+### Method C: Ingress (with `--ingress`)
+If installed, services are routed via an NGINX Ingress Controller on port 80:
 
-If installed, services are routed via port 80/443:
+| Service            | Ingress Prefix    | Example URL                            |
+|:-------------------|:------------------|:---------------------------------------|
+| **User Manager**   | `/user-manager`   | `http://localhost/user-manager/ping`   |
+| **Data Collector** | `/data-collector` | `http://localhost/data-collector/ping` |
 
-| Service | Ingress URL |
-| :--- | :--- |
-| **User Manager** | `http://localhost/user-manager` |
-| **Data Collector** | `http://localhost/data-collector` |
+## 4. Automatic Database Seeding
 
----
+The `deploy.sh` script runs `seed.sh` at the end of the deployment. This creates the following test data:
 
-## 4. API Documentation & Examples
+**Users:**
+- `mario.rossi@gmail.com`
+- `mario.verdi@gmail.com`
+- `enzo.bianchi@gmail.com`
+- `neri.parenti@gmail.com`
+- `luca.blu@gmail.com`
+
+**Interests:**
+- Mario Rossi tracks `LIRF` and `LICC`.
+- Mario Verdi tracks `LICC` and `LIMC`.
+- Others track various airports (`KJFK`, `EGLL`, `RJTT`).
+
+## 5. API Documentation & Examples
 
 These examples use the **NodePorts (Method A)**.
 
 ### User Manager (Port 30000)
 
-| Action | Command Example |
-|:---|:---|
-| **Add User** | `curl -X POST http://localhost:30000/users -H "Content-Type: application/json" -H "Idempotency-Key: key1" -d '{"email": "mario@test.com", "first_name": "Mario", "last_name": "Rossi"}'` |
-| **Ping** | `curl http://localhost:30000/ping` |
+| Action       | Command Example                                                                                                                                                                          |
+|:-------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Add User** | `curl -X POST http://localhost:30000/users -H "Content-Type: application/json" -H "Idempotency-Key: key1" -d '{"email": "test@example.com", "first_name": "Test", "last_name": "User"}'` |
+| **Ping**     | `curl http://localhost:30000/ping`                                                                                                                                                       |
+| **Metrics**  | `curl http://localhost:30000/metrics`                                                                                                                                                    |
 
 ### Data Collector (Port 30001)
 
-| Action | Command Example |
-|:---|:---|
-| **Add Interest** | `curl -X POST http://localhost:30001/interests -H "Content-Type: application/json" -d '{"email": "mario@test.com", "airport_code": "LIRF"}'` |
-| **Get Flights** | `curl http://localhost:30001/flights/LIRF` |
-| **Ping** | `curl http://localhost:30001/ping` |
+| Action           | Command Example                                                                                                                                     |
+|:-----------------|:----------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Add Interest** | `curl -X POST http://localhost:30001/interests -H "Content-Type: application/json" -d '{"email": "mario.rossi@gmail.com", "airport_code": "LIRF"}'` |
+| **Get Flights**  | `curl http://localhost:30001/flights/LIRF`                                                                                                          |
+| **Ping**         | `curl http://localhost:30001/ping`                                                                                                                  |
 
 ### Internal Systems (30002 & 30003)
 
-| Service | Ping Command |
-|:---|:---|
-| **Alert System** | `curl http://localhost:30002/ping` |
+| Service            | Ping Command                       |
+|:-------------------|:-----------------------------------|
+| **Alert System**   | `curl http://localhost:30002/ping` |
 | **Alert Notifier** | `curl http://localhost:30003/ping` |
 
----
+## 6. Monitoring (Prometheus)
 
-## 5. Monitoring (Prometheus)
+Access the Prometheus UI at: [http://localhost:30090](http://localhost:30090)
 
-Access the UI at: [http://localhost:30090](http://localhost:30090)
+**Useful Metrics to Query:**
+- `http_requests_total`
+- `process_cpu_seconds_total`
+- `opensky_api_call_duration_seconds` (if available)
 
-**Useful Queries:**
-- `rate(http_requests_total{service="user-manager"}[1m])`
-- `opensky_api_call_duration_seconds`
-- `flights_fetched_total`
+## 7. End-to-End Test: Triggering an Alert
 
----
-
-## 6. End-to-End Test: Triggering an Alert
-
-To verify that the entire pipeline is working (from User Manager to Telegram Notification), follow this procedure.
-
-**Note:** The `deploy.sh` script automatically runs `seed.sh`, which populates the database with standard users (e.g., `mario.rossi@gmail.com`) and sample interests.
+To verify the full pipeline (User -> Interest -> Flight Check -> Alert -> Notification):
 
 ### Step 1: Get your Telegram Chat ID
-1.  Open Telegram and find a bot that reveals your Chat ID (e.g., `@userinfobot`).
-2.  Send a message (e.g., `/start`) and note down your numeric ID.
+1.  Open Telegram and find a bot like `@userinfobot`.
+2.  Send `/start` to get your numeric ID.
 
-### Step 2: Associate Chat ID with a Seed User
-Choose one of the existing users, for example `mario.rossi@gmail.com`, and update their profile with your Chat ID.
-
+### Step 2: Register Chat ID
+Associate your Telegram ID with a seeded user (e.g., Mario Rossi):
 ```bash
 curl -X POST http://localhost:30000/users/telegram \
   -H "Content-Type: application/json" \
-  -d 
-  {
+  -d '{
     "email": "mario.rossi@gmail.com",
     "telegram_chat_id": "YOUR_CHAT_ID"
-  }
+  }'
 ```
 
-### Step 3: Verify or Add Interests
-Check existing interests for the user:
-```bash
-curl http://localhost:30001/interests/mario.rossi@gmail.com
-```
+### Step 3: Add a Triggering Interest
+Add an interest with a **high_value of 0**. Since there is likely at least 1 flight (or none, if it's night), setting `low_value` to -1 guarantees a trigger if any flights are found (or we can tweak logic). A safer bet is setting `high_value` to `0` so if *any* flight is found, it alerts. If no flights are found, it won't alert unless we set `low_value`.
 
-You can add a new interest with low thresholds to ensure an alert is triggered immediately:
 ```bash
 curl -X POST http://localhost:30001/interests \
   -H "Content-Type: application/json" \
-  -d 
-  {
+  -d '{
     "email": "mario.rossi@gmail.com",
     "airport_code": "LIRF",
     "high_value": 0,
     "low_value": -1
-  }
+  }'
 ```
 
-### Step 4: Add the Bot
-Open Telegram and add the project bot: **@sky_dsbd_bot**.
+### Step 4: Interact with Bot
+Start a chat with **@sky_dsbd_bot** on Telegram so it can message you.
 
-### Step 5: Wait for Notification
-The system checks for flights every 5 minutes. If the flight count exceeds the `high_value` (or is below `low_value`), the Alert System will trigger a notification, and you will receive a message from **@sky_dsbd_bot** with the alert details.
+### Step 5: Wait
+The system checks flights periodically (configured interval). When the condition is met, you should receive a Telegram message.
 
----
-
-## 7. Troubleshooting
+## 8. Troubleshooting
 
 **View Logs:**
 ```bash
-kubectl logs -l app=alert-notifier-system --tail=50
+# Check alert system logs
+kubectl logs -l app=alert-system --tail=100 -f
+
+# Check kafka logs
 kubectl logs -l app=kafka --tail=50
 ```
 
-**Cleanup:**
+**Restart Port Forwarding:**
+If ports are occupied or failed:
+```bash
+./kubernetes/deploy.sh stop-pf
+./kubernetes/deploy.sh up --pf
+```
+
+**Full Reset:**
 ```bash
 ./kubernetes/deploy.sh down
+./kubernetes/deploy.sh up
 ```
