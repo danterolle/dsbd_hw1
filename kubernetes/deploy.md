@@ -117,10 +117,26 @@ These examples use the **NodePorts (Method A)**.
 
 Access the Prometheus UI at: [http://localhost:30090](http://localhost:30090)
 
-**Useful Metrics to Query:**
-- `http_requests_total`
-- `process_cpu_seconds_total`
-- `opensky_api_call_duration_seconds` (if available)
+## 6. Configuration & Credentials
+
+### API Keys
+The system requires valid credentials for external services. You have two options:
+1.  **Create your own**: 
+    *   **Telegram**: Use [BotFather](https://t.me/botfather) to create a bot and get a token.
+    *   **OpenSky**: Register for a free account at [OpenSky Network](https://opensky-network.org/).
+2.  **Request from authors**: You can contact the authors (Dario or Matteo) to receive testing credentials.
+
+Update the `opensky-secrets` and `telegram-secrets` sections in `kubernetes/secrets.yaml` with your keys.
+
+### Infrastructure
+The deployment includes:
+- **PostgreSQL**: Two instances (User DB, Data DB).
+- **Kafka & Zookeeper**: For asynchronous messaging.
+- **Prometheus**: For metrics collection.
+
+---
+
+## 7. End-to-End Test: Triggering an Alert
 
 ## 7. End-to-End Test: Triggering an Alert
 
